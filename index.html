@@ -6,15 +6,15 @@
   <title>我的旅行打卡地图</title>
   <style>
     :root {
-      --primary-color: #3a86ff;
-      --bg-color: #f4f6f9;
+      --primary: #3a86ff;
+      --bg: #f5f6f9;
       --card-bg: #ffffff;
-      --text-color: #2b2d42;
-      --border-color: #e9ecef;
+      --text: #2b2d42;
+      --border: #e9ecef;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: var(--bg-color); color: var(--text-color); min-height: 100vh; display: flex; flex-direction: column; }
+    body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
 
     /* 顶部固定进度条 */
     header {
@@ -23,82 +23,100 @@
       z-index: 100;
       background: #fff;
       padding: 12px 16px;
-      border-bottom: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border);
       box-shadow: 0 2px 8px rgba(0,0,0,0.03);
     }
-    .progress-info { display: flex; justify-content: space-between; font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; }
-    .progress-bar-bg { background: #e9ecef; height: 10px; border-radius: 5px; overflow: hidden; }
-    .progress-bar-fill { background: var(--primary-color); height: 100%; width: 0%; transition: width 0.3s ease; }
+    .progress-info { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; }
+    .progress-bar-bg { background: #e9ecef; height: 8px; border-radius: 4px; overflow: hidden; }
+    .progress-bar-fill { background: var(--primary); height: 100%; width: 0%; transition: width 0.3s ease; }
 
-    /* 主容器 */
-    .main-container { display: flex; flex: 1; flex-direction: column; }
-
-    /* 手机端分类导航（横向滑动、无空白） */
-    sidebar {
+    /* 顶部分类横向滑动菜单 */
+    .nav-container {
       background: #fff;
-      border-bottom: 1px solid var(--border-color);
-      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 55px;
+      z-index: 99;
+    }
+
+    .continents-bar {
+      display: flex;
+      gap: 8px;
+      padding: 10px 12px;
       overflow-x: auto;
       white-space: nowrap;
       -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
     }
-    
-    .continent-group { display: inline-block; margin-right: 8px; }
-    .continent-title {
+    .continents-bar::-webkit-scrollbar { display: none; }
+
+    .nav-tag {
       display: inline-block;
-      padding: 6px 12px;
+      padding: 6px 14px;
       background: #f0f4f8;
-      border-radius: 16px;
-      font-size: 0.88rem;
+      color: #555;
+      border-radius: 18px;
+      font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
+      flex-shrink: 0;
     }
-    .continent-title.active { background: var(--primary-color); color: #fff; }
+    .nav-tag.active { background: var(--primary); color: #fff; }
 
-    .country-list {
+    .countries-bar {
       display: none;
+      gap: 6px;
       padding: 8px 12px;
-      background: #fff;
-      border-bottom: 1px solid var(--border-color);
+      background: #fafbfc;
+      border-top: 1px dashed var(--border);
       overflow-x: auto;
       white-space: nowrap;
+      scrollbar-width: none;
     }
-    .country-list.show { display: block; }
+    .countries-bar::-webkit-scrollbar { display: none; }
+    .countries-bar.show { display: flex; }
 
-    .country-item {
-      display: inline-block;
+    .country-tag {
       padding: 4px 10px;
-      margin-right: 6px;
+      background: #fff;
+      border: 1px solid var(--border);
       border-radius: 12px;
-      font-size: 0.82rem;
-      background: #f8f9fa;
-      border: 1px solid var(--border-color);
+      font-size: 0.78rem;
+      color: #666;
       cursor: pointer;
+      flex-shrink: 0;
     }
-    .country-item.active { border-color: var(--primary-color); color: var(--primary-color); font-weight: 600; }
+    .country-tag.active { border-color: var(--primary); color: var(--primary); font-weight: bold; }
 
-    /* 卡片列表区 */
-    .content-area { flex: 1; padding: 12px; }
-    
-    /* 手机端：单列显示，一行一个卡片 */
-    .cards-list { display: flex; flex-direction: column; gap: 12px; max-width: 600px; margin: 0 auto; }
+    /* 列表主内容区 */
+    .content-area {
+      flex: 1;
+      padding: 12px;
+      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
+    }
 
-    /* 卡片设计 - 手机横向排布 */
+    .cards-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* 卡片设计 - 右侧无文字复选框 */
     .card {
       background: var(--card-bg);
       border-radius: 12px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-      overflow: hidden;
+      padding: 10px 14px;
       display: flex;
-      flex-direction: row;
-      align-items: center;
-      padding: 10px;
       gap: 12px;
+      align-items: center;
     }
 
     .card img {
-      width: 90px;
-      height: 90px;
+      width: 75px;
+      height: 75px;
       border-radius: 8px;
       object-fit: cover;
       flex-shrink: 0;
@@ -106,19 +124,20 @@
 
     .card-body {
       flex: 1;
+      min-width: 0;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      min-width: 0;
+      justify-content: center;
     }
 
     .card-title {
-      font-size: 1rem;
+      font-size: 0.98rem;
       font-weight: bold;
-      margin-bottom: 4px;
+      color: var(--text);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      margin-bottom: 4px;
     }
 
     .card-desc {
@@ -129,46 +148,33 @@
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      margin-bottom: 8px;
     }
 
-    /* 复选框样式 */
+    /* 纯图标打卡复选框（居右） */
     .check-container {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 0.85rem;
-      font-weight: 600;
+      justify-content: center;
+      padding-left: 6px;
       cursor: pointer;
       user-select: none;
-      align-self: flex-start;
+      flex-shrink: 0;
     }
 
     .check-container input {
-      width: 20px;
-      height: 20px;
-      accent-color: var(--primary-color);
+      width: 22px;
+      height: 22px;
+      accent-color: var(--primary);
       cursor: pointer;
-    }
-
-    /* 桌面端自动适配侧边栏 */
-    @media (min-width: 768px) {
-      .main-container { flex-direction: row; }
-      sidebar { width: 220px; border-right: 1px solid var(--border-color); border-bottom: none; white-space: normal; padding: 15px; }
-      .continent-group { display: block; margin-right: 0; margin-bottom: 10px; }
-      .continent-title { display: block; border-radius: 6px; }
-      .country-list { display: block !important; padding: 5px 0 5px 15px; border-bottom: none; white-space: normal; }
-      .country-item { display: block; margin: 4px 0; border: none; background: none; }
-      .content-area { padding: 20px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- 顶部进度条 -->
+  <!-- 顶部打卡进度 -->
   <header>
     <div class="progress-info">
-      <span>旅行打卡进度</span>
+      <span>旅行探索进度</span>
       <span id="progress-text">加载中...</span>
     </div>
     <div class="progress-bar-bg">
@@ -176,42 +182,42 @@
     </div>
   </header>
 
-  <div class="main-container">
-    <!-- 分类导航（有数据才显示） -->
-    <sidebar id="sidebar"></sidebar>
-
-    <!-- 打卡卡片列表（一行一个） -->
-    <main class="content-area">
-      <div class="cards-list" id="cards-list"></div>
-    </main>
+  <!-- 顶部分类导航 -->
+  <div class="nav-container">
+    <div class="continents-bar" id="continents-bar"></div>
+    <div class="countries-bar" id="countries-bar"></div>
   </div>
 
+  <!-- 卡片列表区域 -->
+  <main class="content-area">
+    <div class="cards-list" id="cards-list"></div>
+  </main>
+
   <script>
-    // 已为你填入验证通过的 Google Apps Script 链接
     const API_URL = "https://script.google.com/macros/s/AKfycbz2_OICejP3i7k9sOw9bVj7hCATxl9kk7Xf-_hJmBInI_xkmpTvoI4cc0eWJSkOf2fw/exec";
 
     let travelData = [];
-    let currentFilter = { type: 'all', value: '' };
+    let currentContinent = 'ALL';
+    let currentCountry = 'ALL';
 
-    // 获取数据（只计算实际填写的有效行）
+    // 初始化数据
     async function fetchData() {
       try {
         const response = await fetch(API_URL);
         const rawData = await response.json();
         
-        // 过滤表格中的空行，有名称才算一条数据
+        // 过滤空行，只留有景点的行
         travelData = rawData.filter(item => item.Name && String(item.Name).trim() !== "");
         
-        renderSidebar();
+        renderNav();
         renderCards();
         updateProgress();
       } catch (err) {
-        console.error("加载数据失败:", err);
-        alert("数据加载失败，请检查网络或配置。");
+        console.error("加载失败:", err);
       }
     }
 
-    // 更新实际进度（填几个显示几个）
+    // 更新实际打卡进度
     function updateProgress() {
       const total = travelData.length;
       const visited = travelData.filter(item => item.IsVisited === true || String(item.IsVisited).toUpperCase() === "TRUE").length;
@@ -221,88 +227,116 @@
       document.getElementById('progress-fill').style.width = `${percentage}%`;
     }
 
-    // 按需渲染分类
-    function renderSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.innerHTML = '';
+    // 渲染导航标签
+    function renderNav() {
+      const contBar = document.getElementById('continents-bar');
+      contBar.innerHTML = '';
 
-      // “全部”按钮
-      const allBtn = document.createElement('div');
-      allBtn.className = `continent-title ${currentFilter.type === 'all' ? 'active' : ''}`;
-      allBtn.innerText = '全部';
-      allBtn.onclick = () => {
-        currentFilter = { type: 'all', value: '' };
-        renderSidebar();
+      // 全部按钮
+      const allTag = document.createElement('div');
+      allTag.className = `nav-tag ${currentContinent === 'ALL' ? 'active' : ''}`;
+      allTag.innerText = '全部';
+      allTag.onclick = () => {
+        currentContinent = 'ALL';
+        currentCountry = 'ALL';
+        renderNav();
         renderCards();
       };
-      
-      const allGroup = document.createElement('div');
-      allGroup.className = 'continent-group';
-      allGroup.appendChild(allBtn);
-      sidebar.appendChild(allGroup);
+      contBar.appendChild(allTag);
 
-      // 只提取表格里实际拥有景点的大洲
-      const activeContinents = [...new Set(travelData.map(item => item.Continent))].filter(Boolean);
+      // 按需获取大洲列表
+      const continents = [...new Set(travelData.map(item => item.Continent))].filter(Boolean);
 
-      activeContinents.forEach(continent => {
-        const contGroup = document.createElement('div');
-        contGroup.className = 'continent-group';
-
-        const titleEl = document.createElement('div');
-        const isActive = currentFilter.type === 'continent' && currentFilter.value === continent;
-        titleEl.className = `continent-title ${isActive ? 'active' : ''}`;
-        titleEl.innerText = continent;
-
-        titleEl.onclick = () => {
-          currentFilter = { type: 'continent', value: continent };
-          renderSidebar();
+      continents.forEach(cont => {
+        const tag = document.createElement('div');
+        tag.className = `nav-tag ${currentContinent === cont ? 'active' : ''}`;
+        tag.innerText = cont;
+        tag.onclick = () => {
+          currentContinent = cont;
+          currentCountry = 'ALL';
+          renderNav();
           renderCards();
         };
-
-        contGroup.appendChild(titleEl);
-        sidebar.appendChild(contGroup);
+        contBar.appendChild(tag);
       });
+
+      // 渲染二级国家栏
+      const countryBar = document.getElementById('countries-bar');
+      countryBar.innerHTML = '';
+
+      if (currentContinent !== 'ALL') {
+        const countries = [...new Set(travelData.filter(i => i.Continent === currentContinent).map(i => i.Country))].filter(Boolean);
+        
+        if (countries.length > 0) {
+          countryBar.classList.add('show');
+          
+          const allCountryTag = document.createElement('div');
+          allCountryTag.className = `country-tag ${currentCountry === 'ALL' ? 'active' : ''}`;
+          allCountryTag.innerText = '全部国家';
+          allCountryTag.onclick = () => {
+            currentCountry = 'ALL';
+            renderNav();
+            renderCards();
+          };
+          countryBar.appendChild(allCountryTag);
+
+          countries.forEach(country => {
+            const cTag = document.createElement('div');
+            cTag.className = `country-tag ${currentCountry === country ? 'active' : ''}`;
+            cTag.innerText = country;
+            cTag.onclick = () => {
+              currentCountry = country;
+              renderNav();
+              renderCards();
+            };
+            countryBar.appendChild(cTag);
+          });
+        } else {
+          countryBar.classList.remove('show');
+        }
+      } else {
+        countryBar.classList.remove('show');
+      }
     }
 
-    // 渲染景点卡片（一行一个）
+    // 渲染景点列表
     function renderCards() {
       const container = document.getElementById('cards-list');
       container.innerHTML = '';
 
-      let filteredData = travelData;
-      if (currentFilter.type === 'continent') {
-        filteredData = travelData.filter(item => item.Continent === currentFilter.value);
+      let list = travelData;
+      if (currentContinent !== 'ALL') {
+        list = list.filter(i => i.Continent === currentContinent);
+      }
+      if (currentCountry !== 'ALL') {
+        list = list.filter(i => i.Country === currentCountry);
       }
 
-      if (filteredData.length === 0) {
-        container.innerHTML = '<div style="text-align:center; color:#888; padding:30px;">暂无景点数据</div>';
+      if (list.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#999; padding:40px 0;">暂无相关景点数据</div>';
         return;
       }
 
-      filteredData.forEach(item => {
+      list.forEach(item => {
+        const isChecked = item.IsVisited === true || String(item.IsVisited).toUpperCase() === "TRUE";
         const card = document.createElement('div');
         card.className = 'card';
 
-        const isChecked = item.IsVisited === true || String(item.IsVisited).toUpperCase() === "TRUE";
-
         card.innerHTML = `
-          <img src="${item.ImageURL || 'https://via.placeholder.com/150?text=No+Image'}" alt="${item.Name}">
+          <img src="${item.ImageURL || 'https://via.placeholder.com/150?text=No+Photo'}" alt="${item.Name}">
           <div class="card-body">
-            <div>
-              <div class="card-title">${item.Name}</div>
-              <div class="card-desc">${item.Description || '暂无描述'}</div>
-            </div>
-            <label class="check-container">
-              <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleVisit(${item.ID}, this.checked)">
-              <span>${isChecked ? '已打卡' : '未打卡'}</span>
-            </label>
+            <div class="card-title">${item.Name}</div>
+            <div class="card-desc">${item.Description || '暂无说明'}</div>
           </div>
+          <label class="check-container">
+            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleVisit(${item.ID}, this.checked)">
+          </label>
         `;
         container.appendChild(card);
       });
     }
 
-    // 打卡同步到后台
+    // 打卡同步回传
     async function toggleVisit(id, isChecked) {
       const item = travelData.find(i => i.ID == id);
       if (item) item.IsVisited = isChecked;
@@ -317,11 +351,10 @@
           body: JSON.stringify({ id: id, isVisited: isChecked })
         });
       } catch (err) {
-        console.error("同步至 Google Sheet 失败:", err);
+        console.error("同步失败:", err);
       }
     }
 
-    // 启动
     fetchData();
   </script>
 </body>
