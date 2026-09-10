@@ -326,7 +326,7 @@
           <img src="${item.ImageURL || 'https://via.placeholder.com/150?text=No+Photo'}" alt="${item.Name}">
           <div class="card-body">
             <div class="card-title">${item.Name}</div>
-            <div class="card-desc">${item.Description || '暂无说明'}</div>
+            <div class="card-desc">${item.Description || '计划中'}</div>
           </div>
           <label class="check-container">
             <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleVisit(${item.ID}, this.checked)">
