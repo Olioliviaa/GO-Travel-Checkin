@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的全球旅行打卡地图</title>
+  <style>
+    :root {
+      --primary-color: #3a86ff;
+      --bg-color: #f8f9fa;
+      --card-bg: #ffffff;
+      --text-color: #2b2d42;
+      --sidebar-width: 260px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { display: flex; flex-direction: column; height: 100vh; background-color: var(--bg-color); color: var(--text-color); }
+
+    /* 顶部进度条 */
+    header {
+      background: #fff;
+      padding: 15px 30px;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .progress-info { display: flex; justify-content: space-between; font-weight: bold; }
+    .progress-bar-bg { background: #e9ecef; height: 12px; border-radius: 6px; overflow: hidden; }
+    .progress-bar-fill { background: var(--primary-color); height: 100%; width: 0%; transition: width 0.3s; }
+
+    /* 主布局 */
+    .main-container { display: flex; flex: 1; overflow: hidden; }
+
+    /* 左侧 Sidebar */
+    sidebar {
+      width: var(--sidebar-width);
+      background: #fff;
+      border-right: 1px solid #e9ecef;
+      overflow-y: auto;
+      padding: 20px 10px;
+    }
+    .continent-group { margin-bottom: 10px; }
+    .continent-title { font-size: 1.05rem; font-weight: bold; padding: 10px; cursor: pointer; border-radius: 6px; display: flex; justify-content: space-between; }
+    .continent-title:hover { background: #f0f4f8; }
+    .country-list { margin-left: 15px; display: none; }
+    .country-item { padding: 8px 10px; cursor: pointer; border-radius: 4px; font-size: 0.95rem; margin: 2px 0; }
+    .country-item:hover, .country-item.active { background: #e7f0ff; color: var(--primary-color); }
+
+    /* 右侧卡片区域 */
+    .content-area { flex: 1; padding: 25px; overflow-y: auto; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+
+    /* 卡片设计 */
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s;
+    }
+    .card:hover { transform: translateY(-4px); }
+    .card img { width: 100%; height: 180px; object-fit: cover; }
+    .card-body { padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+    .card-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 8px; }
+    .card-desc { font-size: 0.88rem; color: #6c757d; line-height: 1.4; margin-bottom: 15px; }
+    
+    /* 复选框样式 */
+    .check-container { display: flex; align-items: center; gap: 8px; font-weight: bold; cursor: pointer; user-select: none; }
+    .check-container input { width: 18px; height: 18px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部进度条 -->
+  <header>
+    <div class="progress-info">
+      <span>旅行探索进度</span>
+      <span id="progress-text">加载中...</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progress-fill"></div>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <!-- 左侧分类菜单 -->
+    <sidebar id="sidebar">
+      <!-- 动态生成大洲和国家 -->
+    </sidebar>
+
+    <!-- 右侧卡片区 -->
+    <main class="content-area">
+      <div class="grid" id="cards-grid">
+        <!-- 动态生成景点卡片 -->
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // ⚠️ 记得用您在第一部分生成的链接替换这里的地址！
+    const API_URL = "https://script.google.com/macros/s/AKfycbz2_OICejP3i7k9sOw9bVj7hCATxl9kk7Xf-_hJmBInI_xkmpTvoI4cc0eWJSkOf2fw/exec";
+
+    let travelData = [];
+    let currentFilter = { type: 'all', value: '' };
+
+    // 初始化获取数据
+    async function fetchData() {
+      try {
+        const response = await fetch(API_URL);
+        travelData = await response.json();
+        renderSidebar();
+        renderCards();
+        updateProgress();
+      } catch (err) {
+        console.error("加载数据失败:", err);
+        alert("加载数据失败，请检查 API 链接是否正确。");
+      }
+    }
+
+    // 更新进度条
+    function updateProgress() {
+      const total = travelData.length;
+      const visited = travelData.filter(item => item.IsVisited === true || item.IsVisited === "TRUE").length;
+      const percentage = total > 0 ? Math.round((visited / total) * 100) : 0;
+
+      document.getElementById('progress-text').innerText = `${visited} / ${total} (${percentage}%)`;
+      document.getElementById('progress-fill').style.width = `${percentage}%`;
+    }
+
+    // 渲染左侧 Sidebar
+    function renderSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.innerHTML = '';
+
+      const continents = ["亚洲", "欧洲", "北美洲", "南美洲", "大洋洲", "非洲", "南极洲"];
+
+      continents.forEach(continent => {
+        const contData = travelData.filter(item => item.Continent === continent);
+        if (contData.length === 0) return;
+
+        const countries = [...new Set(contData.map(item => item.Country))];
+
+        const contDiv = document.createElement('div');
+        contDiv.className = 'continent-group';
+        
+        const titleEl = document.createElement('div');
+        titleEl.className = 'continent-title';
+        titleEl.innerHTML = `<span>${continent}</span> <span>▾</span>`;
+        
+        const listEl = document.createElement('div');
+        listEl.className = 'country-list';
+
+        titleEl.onclick = () => {
+          const isExpanded = listEl.style.display === 'block';
+          listEl.style.display = isExpanded ? 'none' : 'block';
+          currentFilter = { type: 'continent', value: continent };
+          renderCards();
+        };
+
+        countries.forEach(country => {
+          const countryEl = document.createElement('div');
+          countryEl.className = 'country-item';
+          countryEl.innerText = country;
+          countryEl.onclick = (e) => {
+            e.stopPropagation();
+            currentFilter = { type: 'country', value: country };
+            renderCards();
+          };
+          listEl.appendChild(countryEl);
+        });
+
+        contDiv.appendChild(titleEl);
+        contDiv.appendChild(listEl);
+        sidebar.appendChild(contDiv);
+      });
+    }
+
+    // 渲染卡片
+    function renderCards() {
+      const grid = document.getElementById('cards-grid');
+      grid.innerHTML = '';
+
+      let filteredData = travelData;
+      if (currentFilter.type === 'continent') {
+        filteredData = travelData.filter(item => item.Continent === currentFilter.value);
+      } else if (currentFilter.type === 'country') {
+        filteredData = travelData.filter(item => item.Country === currentFilter.value);
+      }
+
+      filteredData.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        const isChecked = item.IsVisited === true || item.IsVisited === "TRUE";
+
+        card.innerHTML = `
+          <img src="${item.ImageURL || 'https://via.placeholder.com/300x180'}" alt="${item.Name}">
+          <div class="card-body">
+            <div>
+              <div class="card-title">${item.Name}</div>
+              <div class="card-desc">${item.Description}</div>
+            </div>
+            <label class="check-container">
+              <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleVisit(${item.ID}, this.checked)">
+              <span>${isChecked ? '已打卡' : '标记打卡'}</span>
+            </label>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // 同步勾选状态回传到 Google Sheet
+    async function toggleVisit(id, isChecked) {
+      const item = travelData.find(i => i.ID == id);
+      if (item) item.IsVisited = isChecked;
+      
+      updateProgress();
+
+      try {
+        await fetch(API_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: id, isVisited: isChecked })
+        });
+      } catch (err) {
+        console.error("同步至 Google Sheet 失败:", err);
+      }
+    }
+
+    // 页面加载启动
+    fetchData();
+  </script>
+</body>
+</html>
